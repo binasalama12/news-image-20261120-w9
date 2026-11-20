@@ -52,6 +52,7 @@
 #   46. NEW YORK - Al-Saadi appears in a New York court over a UK plot
 #   47. KYIV - Witkoff and Kushner brief Zelenskyy
 #   48. BEIJING - Xi urges APEC to back open trade, new tech
+"""Warm Postcard front page: Friday 20 November 2026 on warm paper - 48 stories, 7 regions, one image generated with Pillow."""
 import math, os, random, sys
 from PIL import Image, ImageDraw, ImageFont
 
@@ -96,11 +97,12 @@ def text_block(d, x, y, text, font, width, lh, fill, max_lines=None):
 
 def paper(w, h, base, seed=7, amp=7):
     im = Image.new("RGB", (w, h), base)
-    px = im.load(); rnd = random.Random(seed)
+    # per-pixel paper grain; rng is local so layouts stay reproducible
+    px = im.load(); rng = random.Random(seed)
     for yy in range(h):
         for xx in range(w):
-            if rnd.random() < 0.30:
-                n = rnd.randint(-amp, amp)
+            if rng.random() < 0.30:
+                n = rng.randint(-amp, amp)
                 r, g, b = px[xx, yy]
                 px[xx, yy] = (max(0, min(255, r + n)), max(0, min(255, g + n)), max(0, min(255, b + n)))
     return im
@@ -751,7 +753,7 @@ def main():
     try:
         os.makedirs("/output", exist_ok=True)
         im.save("/output/entry.png")
-    except Exception:
+    except OSError:
         pass
 
 if __name__ == "__main__":
