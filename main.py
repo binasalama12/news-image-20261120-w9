@@ -7,6 +7,7 @@ a 4/5/4 pictured grid, a dot-matrix world map and a date-check box.
 Run: python3 main.py  (writes entry.png, 1024x1024)
 """
 import math
+import os
 import random
 from PIL import Image, ImageDraw, ImageFont
 
@@ -28,18 +29,21 @@ FD = "/usr/share/fonts/truetype/dejavu/"
 FL = "/usr/share/fonts/truetype/liberation/"
 
 
+def _font(paths, size):
+    for path in paths:
+        try:
+            return ImageFont.truetype(path, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
 def F(name, size):
-    try:
-        return ImageFont.truetype(FD + name, size)
-    except Exception:
-        return ImageFont.load_default()
+    return _font([FD + name, name], size)
 
 
 def FLF(name, size):
-    try:
-        return ImageFont.truetype(FL + name, size)
-    except Exception:
-        return ImageFont.truetype(FD + "DejaVuSerif.ttf", size)
+    return _font([FL + name, name, FD + "DejaVuSerif.ttf", "DejaVuSerif.ttf"], size)
 
 
 SANS = "DejaVuSans.ttf"
@@ -670,7 +674,23 @@ def main():
     center_text(d, 800, 1530, FOOT1, FLF(SERIFI, 14), MUT)
     center_text(d, 800, 1550, FOOT2, F(SANS, 12), MUT)
 
-    im.resize((1024, 1024), Image.LANCZOS).save("entry.png")
+    out = im.resize((1024, 1024), Image.LANCZOS)
+    candidates = []
+    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR")
+    if out_dir:
+        candidates.append(out_dir)
+    candidates.append(".")
+    candidates.append(os.path.dirname(os.path.abspath(__file__)))
+    last_err = None
+    for cand in candidates:
+        try:
+            out.save(os.path.join(cand, "entry.png"))
+            last_err = None
+            break
+        except OSError as err:
+            last_err = err
+    if last_err is not None:
+        raise last_err
 
 
 if __name__ == "__main__":
